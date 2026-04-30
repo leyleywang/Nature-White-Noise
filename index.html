@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自然白噪音 - Nature White Noise</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="dynamic-background"></div>
+    
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">自然白噪音</h1>
+            <p class="app-subtitle">静谧 · 治愈 · 专注</p>
+        </header>
+
+        <main class="main-content">
+            <section class="audio-library">
+                <h2 class="section-title">声音库</h2>
+                <div class="sound-grid" id="soundGrid">
+                </div>
+            </section>
+
+            <section class="mix-control">
+                <h2 class="section-title">混音控制</h2>
+                <div class="active-tracks" id="activeTracks">
+                    <p class="no-tracks-message">点击声音库中的声音开始播放</p>
+                </div>
+            </section>
+
+            <section class="timer-section">
+                <h2 class="section-title">定时关闭</h2>
+                <div class="timer-control">
+                    <div class="timer-display" id="timerDisplay">--:--</div>
+                    <div class="timer-options" id="timerOptions">
+                        <button class="timer-btn" data-duration="15">15分钟</button>
+                        <button class="timer-btn" data-duration="30">30分钟</button>
+                        <button class="timer-btn" data-duration="45">45分钟</button>
+                        <button class="timer-btn" data-duration="60">1小时</button>
+                        <button class="timer-btn" data-duration="90">1.5小时</button>
+                        <button class="timer-btn" data-duration="120">2小时</button>
+                        <button class="timer-btn" data-duration="0">取消</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="favorites-section">
+                <h2 class="section-title">我的收藏</h2>
+                <div class="favorites-grid" id="favoritesGrid">
+                    <p class="no-favorites-message">暂无收藏的混音组合</p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p class="footer-text">戴上耳机，感受自然的宁静</p>
+        </footer>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
