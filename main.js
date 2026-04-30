@@ -12,6 +12,9 @@ class NatureWhiteNoiseApp {
         this.dynamicBackground = new DynamicBackground('dynamic-background');
         this.favoritesManager = new FavoritesManager();
         
+        const noiseGenerator = this.audioLibrary.getNoiseGenerator();
+        this.mixController.setNoiseGenerator(noiseGenerator);
+        
         this.elements = {
             soundGrid: document.getElementById('soundGrid'),
             activeTracks: document.getElementById('activeTracks'),
