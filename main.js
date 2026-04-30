@@ -263,8 +263,10 @@ class NatureWhiteNoiseApp {
         const sound = this.audioLibrary.getSoundById(soundId);
         if (!sound) return;
 
-        const isActive = this.mixController.toggleTrack(sound);
-        this.updateSoundCardState(soundId, !isActive);
+        console.log(`[App] 点击声音: id=${sound.id}, name=${sound.name}`);
+        const isNowActive = this.mixController.toggleTrack(sound);
+        console.log(`[App] 声音状态: isNowActive=${isNowActive}`);
+        this.updateSoundCardState(soundId, isNowActive);
     }
 
     updateSoundCardState(soundId, isActive) {

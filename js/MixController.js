@@ -37,12 +37,21 @@ class MixController {
         try {
             let source;
             
+            console.log(`[MixController] 准备播放声音: id=${sound.id}, name=${sound.name}, generatorMethod=${sound.generatorMethod}`);
+            
             if (this.noiseGenerator && sound.generatorMethod) {
-                source = this.noiseGenerator[sound.generatorMethod]();
+                if (typeof this.noiseGenerator[sound.generatorMethod] === 'function') {
+                    console.log(`[MixController] 调用生成器方法: ${sound.generatorMethod}`);
+                    source = this.noiseGenerator[sound.generatorMethod]();
+                } else {
+                    console.error(`[MixController] 生成器方法不存在: ${sound.generatorMethod}`);
+                    return false;
+                }
             } else if (sound.generator) {
+                console.log(`[MixController] 使用 generator 函数`);
                 source = sound.generator();
             } else {
-                console.error('没有可用的声音生成方式');
+                console.error('[MixController] 没有可用的声音生成方式');
                 return false;
             }
 
@@ -52,6 +61,8 @@ class MixController {
             source.connect(gainNode);
             gainNode.connect(this.masterGain);
             source.start();
+
+            console.log(`[MixController] 声音播放成功: ${sound.name}, 音量: ${sound.defaultVolume}`);
 
             this.activeTracks.set(sound.id, {
                 sound: sound,
@@ -63,7 +74,7 @@ class MixController {
             this._notifyChange();
             return true;
         } catch (e) {
-            console.error('创建音轨失败:', e);
+            console.error('[MixController] 创建音轨失败:', e);
             return false;
         }
     }
