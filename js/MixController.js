@@ -2,6 +2,25 @@ class MixController {
     constructor() {
         this.activeTracks = new Map();
         this.onTrackChange = null;
+        this.audioContext = null;
+        this.masterGain = null;
+        this.noiseGenerator = null;
+    }
+
+    _initAudioContext() {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.audioContext.createGain();
+            this.masterGain.gain.value = 1;
+            this.masterGain.connect(this.audioContext.destination);
+        }
+        if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    }
+
+    setNoiseGenerator(noiseGenerator) {
+        this.noiseGenerator = noiseGenerator;
     }
 
     addTrack(sound) {
@@ -9,29 +28,56 @@ class MixController {
             return false;
         }
 
-        const audio = new Audio(sound.url);
-        audio.loop = true;
-        audio.volume = sound.defaultVolume;
+        this._initAudioContext();
 
-        this.activeTracks.set(sound.id, {
-            sound: sound,
-            audio: audio,
-            volume: sound.defaultVolume
-        });
+        if (this.noiseGenerator) {
+            this.noiseGenerator.init(this.audioContext);
+        }
 
-        audio.play().catch(e => {
-            console.log('音频播放失败:', e);
-        });
+        try {
+            let source;
+            
+            if (this.noiseGenerator && sound.generatorMethod) {
+                source = this.noiseGenerator[sound.generatorMethod]();
+            } else if (sound.generator) {
+                source = sound.generator();
+            } else {
+                console.error('没有可用的声音生成方式');
+                return false;
+            }
 
-        this._notifyChange();
-        return true;
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = sound.defaultVolume;
+
+            source.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            source.start();
+
+            this.activeTracks.set(sound.id, {
+                sound: sound,
+                source: source,
+                gainNode: gainNode,
+                volume: sound.defaultVolume
+            });
+
+            this._notifyChange();
+            return true;
+        } catch (e) {
+            console.error('创建音轨失败:', e);
+            return false;
+        }
     }
 
     removeTrack(soundId) {
         const track = this.activeTracks.get(soundId);
         if (track) {
-            track.audio.pause();
-            track.audio.currentTime = 0;
+            try {
+                track.source.stop();
+                track.source.disconnect();
+                track.gainNode.disconnect();
+            } catch (e) {
+                console.log('停止音轨时出错:', e);
+            }
             this.activeTracks.delete(soundId);
             this._notifyChange();
             return true;
@@ -41,9 +87,10 @@ class MixController {
 
     setVolume(soundId, volume) {
         const track = this.activeTracks.get(soundId);
-        if (track) {
-            track.audio.volume = volume;
-            track.volume = volume;
+        if (track && track.gainNode) {
+            const clampedVolume = Math.max(0, Math.min(1, volume));
+            track.gainNode.gain.value = clampedVolume;
+            track.volume = clampedVolume;
             return true;
         }
         return false;
@@ -77,17 +124,15 @@ class MixController {
     }
 
     pauseAll() {
-        this.activeTracks.forEach(track => {
-            track.audio.pause();
-        });
+        if (this.audioContext && this.audioContext.state === 'running') {
+            this.audioContext.suspend();
+        }
     }
 
     resumeAll() {
-        this.activeTracks.forEach(track => {
-            track.audio.play().catch(e => {
-                console.log('音频恢复播放失败:', e);
-            });
-        });
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
     }
 
     stopAll() {
